@@ -1,0 +1,94 @@
+<section class="shop-head shell">
+  <p class="crumb"><a href="/">Imagepro</a> / Order hats online</p>
+  <h1>Design your hats.</h1>
+  <p class="lede">Pick how your logo goes on, choose your hats, upload your logo and check out. We email you a mockup to approve before anything gets made.</p>
+  <p class="sample-banner" id="sampleBanner" hidden>Trial version: prices shown are samples, not Imagepro's real price list.</p>
+</section>
+
+<section class="shell builder">
+  <form id="builder" class="b-form" novalidate>
+    <div class="hp" aria-hidden="true"><label>Company <input type="text" name="company" tabindex="-1" autocomplete="off"></label></div>
+    <div class="b-main">
+      <nav class="b-steps" aria-label="Order progress">
+        <button type="button" data-go="0" aria-current="step">Decoration</button>
+        <button type="button" data-go="1">Hats</button>
+        <button type="button" data-go="2">Logo</button>
+        <button type="button" data-go="3">Checkout</button>
+      </nav>
+
+      <fieldset class="b-step" data-step="0">
+        <legend>How should your logo go on?</legend>
+        <div class="deco-list" id="decoList"></div>
+        <div class="extras">
+          <p class="mini">Add-ons (per hat)</p>
+          <div id="extraList"></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="b-step" data-step="1" hidden>
+        <legend>Pick your hats</legend>
+        <p class="b-help">Type how many you want next to each color. Mix and match styles and colors. <span id="minNote"></span></p>
+        <div id="styleList"></div>
+      </fieldset>
+
+      <fieldset class="b-step" data-step="2" hidden>
+        <legend>Upload your logo</legend>
+        <label class="drop" id="drop">
+          <input type="file" name="artwork" id="artwork" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.pdf,.ai,.eps,.psd">
+          <span class="drop-txt"><b>Drop your logo here or tap to choose</b><small>PNG, JPG, PDF, AI, EPS or SVG, up to 20 MB. A clear phone photo works too.</small></span>
+          <img class="drop-prev" id="dropPrev" alt="" hidden>
+        </label>
+        <label class="check"><input type="checkbox" name="no_logo" value="1" id="noLogo"><i></i>I don't have a logo file yet. Help me with it.</label>
+        <label class="field">Where should it go?
+          <select name="placement" id="placement"></select>
+        </label>
+        <label class="field">Notes for the shop
+          <textarea name="notes" rows="3" placeholder="Thread colors, patch shape, anything we should know"></textarea>
+        </label>
+      </fieldset>
+
+      <fieldset class="b-step" data-step="3" hidden>
+        <legend>Checkout</legend>
+        <div class="field-row">
+          <label class="field">Name *<input name="name" autocomplete="name" required></label>
+          <label class="field">Phone *<input name="phone" type="tel" autocomplete="tel" required></label>
+        </div>
+        <label class="field">Email * <small>(your mockup and updates go here)</small><input name="email" type="email" autocomplete="email" required></label>
+        <div class="pick">
+          <p class="mini">Getting it</p>
+          <label><input type="radio" name="fulfillment" value="pickup" checked><i></i>Pick up in Biddeford</label>
+          <label><input type="radio" name="fulfillment" value="delivery"><i></i>Local delivery</label>
+        </div>
+        <label class="field addr" hidden>Delivery address<input name="address" autocomplete="street-address"></label>
+        <label class="field">Need them by? <small>(optional)</small><input name="need_by" placeholder="Date or event"></label>
+        <p class="b-help">You pay now. We email a mockup of your logo on the hat, and nothing gets made until you approve it.</p>
+      </fieldset>
+
+      <div class="b-nav">
+        <button type="button" class="btn btn-line" id="backBtn" hidden>Back</button>
+        <button type="button" class="btn btn-ink" id="nextBtn">Next: pick hats</button>
+        <button type="submit" class="btn btn-ink btn-big" id="payBtn" hidden>Pay</button>
+      </div>
+      <p class="form-msg" id="bMsg" role="status" aria-live="polite"></p>
+    </div>
+
+    <aside class="b-sum" aria-label="Order summary">
+      <p class="sum-label">Your order</p>
+      <p class="sum-deco" id="sumDeco">Embroidery</p>
+      <ul class="sum-lines" id="sumLines"><li class="muted">No hats yet</li></ul>
+      <div class="sum-qty"><span>Hats</span><b id="sumQty">0</b></div>
+      <div class="sum-each"><span>Price per hat</span><b id="sumEach">–</b></div>
+      <p class="sum-break" id="sumBreak"></p>
+      <dl class="totals">
+        <div id="sumTaxRow" hidden><dt>Sales tax</dt><dd id="sumTax">$0</dd></div>
+        <div class="grand"><dt>Total</dt><dd id="sumTotal">$0</dd></div>
+      </dl>
+      <table class="breaks" id="breakTable" aria-label="Price breaks"></table>
+    </aside>
+  </form>
+</section>
+
+<div class="mbar" id="mbar">
+  <div><span id="mQty">0 hats</span><b id="mTotal">$0</b></div>
+  <button type="button" class="btn btn-ink" id="mNext">Next</button>
+</div>

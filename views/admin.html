@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Imagepro Dashboard</title>
+<style>
+[hidden]{display:none!important}
+*{box-sizing:border-box}body{margin:0;background:#f3f1ea;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#111;font-size:15px}
+header{background:#141414;color:#fff;padding:12px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header img{height:34px;background:#fff;border-radius:6px;padding:3px}header h1{font-size:18px;margin:0;flex:1}
+header a{color:#ffc917;font-weight:700;text-decoration:none;font-size:14px}
+main{max-width:1060px;margin:0 auto;padding:18px}
+.tabs{display:flex;gap:6px;margin:0 0 18px;flex-wrap:wrap;border-bottom:2px solid #141414}
+.tabs button{padding:10px 16px;border:0;background:none;font:inherit;font-weight:700;cursor:pointer;border-radius:8px 8px 0 0}
+.tabs button.on{background:#141414;color:#fff}
+.tabs .badge{display:inline-block;min-width:20px;padding:1px 6px;border-radius:10px;background:#e23b24;color:#fff;font-size:12px;margin-left:6px}
+.view[hidden]{display:none}
+.bar{display:flex;gap:10px;align-items:center;margin:4px 0 14px;flex-wrap:wrap}.bar h2{margin:0;font-size:18px;flex:1}
+.bar a,.bar select,.bar button,.btn{padding:8px 14px;border-radius:8px;border:1px solid #bbb;background:#fff;font:inherit;font-weight:600;text-decoration:none;color:#111;cursor:pointer;font-size:14px}
+.btn.dark{background:#141414;color:#fff;border-color:#141414}.btn.red{border-color:#e23b24;color:#c0221d}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;border-left:6px solid #ffc917}
+.card.st-paid,.card.st-approved,.card.st-changes_requested{border-color:#e23b24}.card.st-mockup_sent{border-color:#2347d6}
+.card.st-printing{border-color:#7a3fd0}.card.st-ready{border-color:#1a9c4b}.card.st-completed,.card.st-cancelled,.card.st-awaiting_payment{border-color:#bbb}
+.card h3{margin:0;font-size:17px}.meta{color:#666;font-size:13px;margin:3px 0 10px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#eee;margin-left:6px;vertical-align:middle}
+.pill.demo{background:#ffc917}.pill.act{background:#e23b24;color:#fff}
+.cols{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+table.it{width:100%;border-collapse:collapse;font-size:14px}table.it td,table.it th{padding:5px 6px;border-bottom:1px solid #eee;text-align:left}
+table.it th{font-size:11px;text-transform:uppercase;color:#888}table.it td:not(:first-child),table.it th:not(:first-child){text-align:right}
+.kv{font-size:14px}.kv div{margin-bottom:6px}.kv small{display:block;color:#888;font-size:11px;text-transform:uppercase}
+.files{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+.file{border:1px dashed #bbb;border-radius:8px;padding:10px;font-size:13px;min-width:180px;flex:1}
+.file img{max-width:160px;max-height:110px;display:block;margin:6px 0;background:#f6f6f6}
+.file b{display:block;font-size:11px;text-transform:uppercase;color:#888}
+.note-alert{background:#fde3dd;color:#8c1d0e;padding:8px 10px;border-radius:8px;font-size:14px;margin:8px 0}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.acts a,.acts button,.acts select,.acts label.btn{padding:8px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;font:inherit;font-size:14px;font-weight:600;text-decoration:none;color:#111;cursor:pointer}
+.acts .del{border-color:#e23b24;color:#c0221d;margin-left:auto}
+.acts .btn.dark{background:#141414;color:#fff;border-color:#141414}
+.file{max-width:420px}
+.acts input[type=file]{display:none}
+textarea{width:100%;margin-top:8px;border:1px solid #ccc;border-radius:8px;padding:8px;font:inherit;font-size:14px}
+.empty{text-align:center;color:#777;padding:40px;background:#fff;border-radius:12px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#141414;color:#fff;padding:10px 16px;border-radius:8px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+/* deals */
+.deal-row{display:grid;grid-template-columns:90px 1fr auto;gap:14px;align-items:center}
+.deal-row img,.deal-row .ph{width:90px;height:90px;object-fit:cover;border-radius:8px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888}
+.deal-form{background:#fff;border-radius:12px;padding:18px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.deal-form[hidden]{display:none}
+.deal-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;text-transform:uppercase;color:#666}
+.deal-form input,.deal-form textarea{font:inherit;font-size:15px;padding:9px;border:1px solid #bbb;border-radius:8px;text-transform:none;color:#111;font-weight:400}
+.deal-form .wide{grid-column:1/-1}.deal-form .row{flex-direction:row;align-items:center;gap:8px;text-transform:none;font-size:14px;color:#111}
+.deal-form h3{grid-column:1/-1;margin:0}
+/* print sheet */
+.sheet{background:#fff;border-radius:12px;padding:18px}
+.sheet h3{margin:18px 0 6px;font-size:16px;border-bottom:2px solid #141414;padding-bottom:4px}
+.sheet table{border-collapse:collapse;font-size:14px;width:100%}.sheet td,.sheet th{border:1px solid #ddd;padding:6px 8px;text-align:center}.sheet th{background:#f3f1ea}
+.sheet td:first-child,.sheet th:first-child{text-align:left}
+.sheet .tot{font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:#fff;border-radius:12px;padding:14px}.stat b{display:block;font-size:28px}.stat span{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.06em}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.panel{background:#fff;border-radius:12px;padding:14px}.panel h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#666}
+.panel li{display:flex;justify-content:space-between;padding:3px 0;font-size:14px;list-style:none}.panel ul{margin:0;padding:0}
+.lead{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;border-left:6px solid #ffc917}
+.lead.won{border-color:#1a9c4b}.lead.lost{border-color:#aaa;opacity:.8}.lead.contacted,.lead.quoted{border-color:#3d7be0}
+.lead h3{margin:0;font-size:17px}.kv2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 14px;font-size:14px;margin-bottom:10px}.kv2 small{display:block;color:#888;font-size:11px;text-transform:uppercase}
+.details{background:#f7f5ee;border-radius:8px;padding:10px;font-size:14px;white-space:pre-wrap;margin-bottom:10px}
+@media (max-width:720px){.cols,.deal-form{grid-template-columns:1fr}.deal-row{grid-template-columns:64px 1fr}.deal-row img,.deal-row .ph{width:64px;height:64px}.deal-row .acts{grid-column:1/-1}}
+@media print{header,.tabs,.bar,.no-print{display:none!important}body{background:#fff}.sheet{padding:0}main{padding:0}}
+</style></head><body>
+<header><img src="/img/logo-wordmark.png" alt=""><h1>Imagepro dashboard</h1><a href="/" target="_blank">View site</a><a href="/deals" target="_blank">Deals page</a><a href="/admin/logout">Sign out</a></header>
+<main>
+<nav class="tabs" id="tabs">
+  <button data-v="orders" class="on">Orders <span class="badge" id="ordBadge" hidden></span></button>
+  <button data-v="print">Print sheet</button>
+  <button data-v="deals">Deals</button>
+  <button data-v="leads">Quote requests</button>
+  <button data-v="traffic">Traffic</button>
+</nav>
+
+<section class="view" id="v-orders">
+  <div class="bar"><h2>Online orders <span id="ordCount"></span></h2>
+    <select id="ordFilter">
+      <option value="open">Open orders</option><option value="">All orders</option>
+      <option value="paid">Paid, needs mockup</option><option value="changes_requested">Changes requested</option>
+      <option value="mockup_sent">Waiting on approval</option><option value="approved">Approved, ready to print</option>
+      <option value="printing">Printing</option><option value="ready">Ready</option><option value="completed">Done</option>
+      <option value="awaiting_payment">Unpaid</option><option value="cancelled">Cancelled</option>
+    </select>
+  </div>
+  <div id="orders"></div>
+</section>
+
+<section class="view" id="v-print" hidden>
+  <div class="bar"><h2>Print sheet</h2>
+    <label><input type="checkbox" class="ps" value="paid" checked> Paid</label>
+    <label><input type="checkbox" class="ps" value="approved" checked> Approved</label>
+    <label><input type="checkbox" class="ps" value="printing" checked> Printing</label>
+    <button class="btn dark" onclick="window.print()">Print</button>
+  </div>
+  <div class="sheet" id="sheet"></div>
+</section>
+
+<section class="view" id="v-deals" hidden>
+  <div class="bar"><h2>Deals</h2><button class="btn dark" id="newDeal">+ New deal</button></div>
+  <form class="deal-form" id="dealForm" hidden>
+    <h3 id="dfTitle">New deal</h3>
+    <input type="hidden" name="id">
+    <label class="wide">Title<input name="title" required placeholder="Holiday Hoodie Bundle"></label>
+    <label>Price ($)<input name="price" inputmode="decimal" required placeholder="45"></label>
+    <label>Price is<input name="unit_label" value="each" placeholder="each / per pack"></label>
+    <label class="wide">Description<textarea name="blurb" rows="3" placeholder="What's included, colors, print"></textarea></label>
+    <label>Sizes (comma separated)<input name="sizes" placeholder="S,M,L,XL,2XL"></label>
+    <label>Colors (comma separated)<input name="colors" placeholder="Black,Charcoal"></label>
+    <label>Ends on (optional)<input name="ends_at" type="date"></label>
+    <label>Photo<input name="photo" type="file" accept=".jpg,.jpeg,.png,.webp"></label>
+    <label class="row"><input type="checkbox" name="needs_logo" value="1"> Customer uploads a logo (sends a mockup to approve)</label>
+    <label class="row"><input type="checkbox" name="active" value="1" checked> Live on the site</label>
+    <label class="row" id="rmPhotoRow" hidden><input type="checkbox" name="remove_photo" value="1"> Remove current photo</label>
+    <div class="acts wide"><button class="btn dark" type="submit">Save deal</button><button class="btn" type="button" id="cancelDeal">Cancel</button><span id="dfMsg" style="color:#c0221d;font-weight:600"></span></div>
+  </form>
+  <div id="deals"></div>
+</section>
+
+<section class="view" id="v-leads" hidden>
+  <div class="bar"><h2>Quote requests <span id="count"></span></h2>
+    <select id="filter"><option value="">All statuses</option><option>new</option><option>contacted</option><option>quoted</option><option>won</option><option>lost</option></select>
+    <a href="/admin/api/export.csv">Export CSV</a></div>
+  <div id="leads"></div>
+</section>
+
+<section class="view" id="v-traffic" hidden>
+  <div class="bar"><h2>Traffic</h2><select id="range"><option value="d7">Last 7 days</option><option value="d30">Last 30 days</option><option value="d90">Last 90 days</option></select></div>
+  <div class="stats" id="stats"></div>
+  <div class="panels" id="panels"></div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function money(c){return '$'+(c/100).toFixed(2).replace(/\.00$/,'')}
+function toast(t){var el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('on')},2200)}
+function api(path,opt){return fetch('/admin/api'+path,Object.assign({credentials:'same-origin'},opt||{})).then(function(r){if(r.status===401){location.reload();throw 0}return r.json()})}
+function jsonOpt(method,body){return{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}}
+
+/* tabs */
+document.getElementById('tabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+  [].forEach.call(this.children,function(x){x.classList.toggle('on',x===b)});
+  ['orders','print','deals','leads','traffic'].forEach(function(v){document.getElementById('v-'+v).hidden=v!==b.getAttribute('data-v')});
+  if(b.getAttribute('data-v')==='print')renderSheet();});
+
+/* ---------- orders ---------- */
+var ORDERS=[],LABELS={},OPEN=['paid','changes_requested','mockup_sent','approved','printing','ready'];
+var NEXT={paid:'mockup',changes_requested:'mockup',mockup_sent:null,approved:'printing',printing:'ready',ready:'completed'};
+function loadOrders(){return api('/orders').then(function(d){ORDERS=d.orders;LABELS=d.statuses;renderOrders();
+  var need=ORDERS.filter(function(o){return o.status==='paid'||o.status==='changes_requested'||o.status==='approved'||(o.status==='paid'&&!o.needs_mockup)}).length;
+  var b=$('#ordBadge');b.hidden=!need;b.textContent=need})}
+function renderOrders(){var f=$('#ordFilter').value;
+  var rows=ORDERS.filter(function(o){return f==='open'?OPEN.indexOf(o.status)>-1:(!f||o.status===f)});
+  $('#ordCount').textContent='('+rows.length+')';
+  if(!rows.length){$('#orders').innerHTML='<div class="empty">No orders here yet.</div>';return}
+  $('#orders').innerHTML=rows.map(function(o){var ph=String(o.phone).replace(/[^\d+]/g,'');
+  var items='<table class="it"><tr><th>Item</th><th>Qty</th><th>Each</th><th>Line</th></tr>'+o.items.map(function(i){return'<tr><td>'+esc([i.styleName||i.label,i.color,i.size].filter(Boolean).join(' · '))+'</td><td>'+i.qty+'</td><td>'+money(i.unit)+'</td><td>'+money(i.line)+'</td></tr>'}).join('')+'<tr><td><b>Total</b></td><td>'+o.items.reduce(function(t,i){return t+i.qty},0)+'</td><td></td><td><b>'+money(o.total_cents)+'</b></td></tr></table>';
+  var kv=function(k,v){return v?'<div><small>'+k+'</small>'+esc(v)+'</div>':''};
+  var art=o.artwork_file?'<div class="file"><b>Customer logo</b>'+(o.artworkIsImage?'<img src="/admin/api/orders/'+o.id+'/artwork?view=1" alt="">':'')+'<a href="/admin/api/orders/'+o.id+'/artwork">Download '+esc(o.artwork_name||'file')+'</a></div>':(o.needs_mockup?'<div class="file"><b>Customer logo</b>No file uploaded</div>':'');
+  var mock=o.mockup_file?'<div class="file"><b>Mockup sent</b>'+(o.mockupIsImage?'<img src="/admin/api/orders/'+o.id+'/mockup" alt="">':'<a href="/admin/api/orders/'+o.id+'/mockup" target="_blank">Open PDF</a>')+'</div>':'';
+  var nx=NEXT[o.status];var quick='';
+  if(o.needs_mockup&&(o.status==='paid'||o.status==='changes_requested'))quick='<label class="btn dark">Upload mockup &amp; send<input type="file" accept=".png,.jpg,.jpeg,.webp,.pdf" data-act="mockup"></label>';
+  else if(o.status==='mockup_sent')quick='<label class="btn">Replace mockup<input type="file" accept=".png,.jpg,.jpeg,.webp,.pdf" data-act="mockup"></label>';
+  else if(o.status==='paid'&&!o.needs_mockup)quick='<button class="btn dark" data-act="go" data-to="printing">Start printing</button>';
+  else if(nx&&nx!=='mockup')quick='<button class="btn dark" data-act="go" data-to="'+nx+'">Mark '+esc(nx==='completed'?'picked up':nx)+'</button>';
+  return'<div class="card st-'+esc(o.status)+'" data-id="'+o.id+'"><h3>'+esc(o.ref)+' · '+esc(o.title)+' <span class="pill'+(OPEN.indexOf(o.status)>-1&&o.status!=='mockup_sent'&&o.status!=='printing'&&o.status!=='ready'?' act':'')+'">'+esc(o.statusLabel)+'</span>'+(o.payment_mode==='demo'?'<span class="pill demo">DEMO</span>':'')+'</h3>'
+  +'<div class="meta">'+esc(o.created_at)+' UTC · '+esc(o.kind==='custom'?'Hat builder':'Deal')+' · '+esc(o.name)+'</div>'
+  +(o.status==='changes_requested'&&o.change_note?'<div class="note-alert"><b>Customer asked for changes:</b> '+esc(o.change_note)+'</div>':'')
+  +'<div class="cols"><div>'+items+'</div><div class="kv">'+kv('Customer',o.name)+kv('Phone',o.phone)+kv('Email',o.email)+kv('Decoration',[o.decoration,o.extras].filter(Boolean).join(' + '))+kv('Placement',o.placement)+kv('Getting it',o.fulfillment==='delivery'?'Delivery: '+(o.address||''):'Pickup')+kv('Need by',o.need_by)+kv('Notes',o.notes)+'</div></div>'
+  +'<div class="files">'+art+mock+'</div>'
+  +'<div class="acts">'+quick+'<a href="tel:'+esc(ph)+'">Call</a><a href="sms:'+esc(ph)+'">Text</a><a href="mailto:'+esc(o.email)+'">Email</a><a href="'+esc(o.trackUrl)+'" target="_blank">Customer view</a>'
+  +'<select data-act="status">'+Object.keys(LABELS).map(function(s){return'<option value="'+s+'"'+(s===o.status?' selected':'')+'>'+esc(LABELS[s])+'</option>'}).join('')+'</select>'
+  +'<button class="del" data-act="del">Delete</button></div>'
+  +'<textarea rows="2" placeholder="Private notes (saves when you click away)" data-act="notes">'+esc(o.admin_notes||'')+'</textarea></div>'}).join('')}
+$('#ordFilter').addEventListener('change',renderOrders);
+var ob=$('#orders');
+function oid(el){return el.closest('.card').getAttribute('data-id')}
+function setStatus(id,s){return api('/orders/'+id,jsonOpt('PATCH',{status:s})).then(function(){toast('Updated');return loadOrders()})}
+ob.addEventListener('click',function(e){var a=e.target.getAttribute('data-act');if(!a)return;var id=oid(e.target);
+  if(a==='go')setStatus(id,e.target.getAttribute('data-to'));
+  if(a==='del'){if(!confirm('Delete this order permanently? Files are deleted too. This cannot be undone.'))return;api('/orders/'+id,{method:'DELETE'}).then(function(){toast('Deleted');loadOrders()})}});
+ob.addEventListener('change',function(e){var a=e.target.getAttribute('data-act');if(!a)return;var id=oid(e.target);
+  if(a==='status')setStatus(id,e.target.value);
+  if(a==='mockup'&&e.target.files.length){var fd=new FormData();fd.append('mockup',e.target.files[0]);toast('Uploading…');
+    api('/orders/'+id+'/mockup',{method:'POST',body:fd}).then(function(r){if(r.ok){toast('Mockup sent to customer');loadOrders()}else toast(r.error||'Upload failed')})}});
+ob.addEventListener('focusout',function(e){if(e.target.getAttribute('data-act')==='notes')api('/orders/'+oid(e.target),jsonOpt('PATCH',{admin_notes:e.target.value}))});
+
+/* ---------- print sheet ---------- */
+document.querySelectorAll('.ps').forEach(function(c){c.addEventListener('change',renderSheet)});
+function renderSheet(){var st=[].map.call(document.querySelectorAll('.ps:checked'),function(c){return c.value});
+  var rows=ORDERS.filter(function(o){return st.indexOf(o.status)>-1});
+  if(!rows.length){$('#sheet').innerHTML='<p>Nothing to print for those statuses.</p>';return}
+  var groups={};
+  rows.forEach(function(o){o.items.forEach(function(i){var g=(i.styleName||i.label)+(o.decoration?' · '+o.decoration:'');groups[g]=groups[g]||{sizes:{},colors:{}};var G=groups[g];var sz=i.size||'One size',cl=i.color||'—';G.sizes[sz]=1;G.colors[cl]=G.colors[cl]||{};G.colors[cl][sz]=(G.colors[cl][sz]||0)+i.qty})});
+  var html='<p style="margin:0;color:#666">'+rows.length+' order'+(rows.length>1?'s':'')+': '+rows.map(function(o){return esc(o.ref+' '+o.name)}).join(', ')+'</p>';
+  Object.keys(groups).forEach(function(g){var G=groups[g],sz=Object.keys(G.sizes);
+    html+='<h3>'+esc(g)+'</h3><table><tr><th>Color</th>'+sz.map(function(s){return'<th>'+esc(s)+'</th>'}).join('')+'<th>Total</th></tr>'
+    +Object.keys(G.colors).map(function(c){var t=0;return'<tr><td>'+esc(c)+'</td>'+sz.map(function(s){var n=G.colors[c][s]||0;t+=n;return'<td>'+(n||'')+'</td>'}).join('')+'<td class="tot">'+t+'</td></tr>'}).join('')+'</table>'});
+  $('#sheet').innerHTML=html}
+
+/* ---------- deals ---------- */
+var DEALS=[];var df=$('#dealForm');function F(n){return df.elements.namedItem(n)}
+function loadDeals(){return api('/deals').then(function(d){DEALS=d.deals;renderDeals()})}
+function renderDeals(){if(!DEALS.length){$('#deals').innerHTML='<div class="empty">No deals yet. Click New deal to post one.</div>';return}
+  $('#deals').innerHTML=DEALS.map(function(d){return'<div class="card" data-id="'+d.id+'"><div class="deal-row">'+(d.photo?'<img src="'+esc(d.photo)+'" alt="">':'<div class="ph">No photo</div>')
+  +'<div><h3>'+esc(d.title)+(d.active?'':' <span class="pill">Hidden</span>')+(d.is_sample?' <span class="pill demo">Sample</span>':'')+'</h3><div class="meta">'+money(d.price_cents)+' '+esc(d.unit_label)+(d.ends_at?' · ends '+esc(d.ends_at):'')+(d.needs_logo?' · logo + mockup':'')+'</div><div class="meta">'+esc(d.url)+'</div></div>'
+  +'<div class="acts"><button data-act="copy">Copy link</button><a href="'+esc(d.url)+'" target="_blank">View</a><button data-act="toggle">'+(d.active?'Hide':'Make live')+'</button><button data-act="edit">Edit</button><button class="del" data-act="del">Delete</button></div></div></div>'}).join('')}
+function openForm(d){df.hidden=false;df.reset();$('#dfMsg').textContent='';$('#dfTitle').textContent=d?'Edit deal':'New deal';$('#rmPhotoRow').hidden=!(d&&d.photo);
+  F('id').value=d?d.id:'';if(d){F('title').value=d.title;F('price').value=d.price;F('unit_label').value=d.unit_label;F('blurb').value=d.blurb||'';F('sizes').value=d.sizes||'';F('colors').value=d.colors||'';F('ends_at').value=d.ends_at||'';F('needs_logo').checked=!!d.needs_logo;F('active').checked=!!d.active}
+  df.scrollIntoView({behavior:'smooth'})}
+$('#newDeal').addEventListener('click',function(){openForm(null)});
+$('#cancelDeal').addEventListener('click',function(){df.hidden=true});
+df.addEventListener('submit',function(e){e.preventDefault();var fd=new FormData(df);var id=fd.get('id');fd.delete('id');
+  fd.set('needs_logo',F('needs_logo').checked?'1':'0');fd.set('active',F('active').checked?'1':'0');if(!fd.get('photo')||!fd.get('photo').size)fd.delete('photo');
+  api(id?'/deals/'+id:'/deals',{method:id?'PATCH':'POST',body:fd}).then(function(r){if(!r.ok){$('#dfMsg').textContent=r.error||'Could not save';return}df.hidden=true;toast('Deal saved');loadDeals()})});
+$('#deals').addEventListener('click',function(e){var a=e.target.getAttribute('data-act');if(!a)return;var id=e.target.closest('.card').getAttribute('data-id');var d=DEALS.filter(function(x){return String(x.id)===id})[0];
+  if(a==='copy'){(navigator.clipboard?navigator.clipboard.writeText(d.url):Promise.reject()).then(function(){toast('Link copied. Paste it in your post.')},function(){prompt('Copy this link:',d.url)})}
+  if(a==='edit')openForm(d);
+  if(a==='toggle'){var fd=new FormData();fd.append('only_active',d.active?'0':'1');api('/deals/'+id,{method:'PATCH',body:fd}).then(function(){toast(d.active?'Hidden':'Live');loadDeals()})}
+  if(a==='del'){if(!confirm('Delete this deal? Its link will stop working.'))return;api('/deals/'+id,{method:'DELETE'}).then(function(){toast('Deleted');loadDeals()})}});
+
+/* ---------- quote requests ---------- */
+var LEADS=[],STATUSES=['new','contacted','quoted','won','lost'];
+function renderLeads(){var f=$('#filter').value;var rows=LEADS.filter(function(l){return!f||l.status===f});
+$('#count').textContent='('+rows.length+')';
+if(!rows.length){$('#leads').innerHTML='<div class="empty">No requests yet.</div>';return}
+$('#leads').innerHTML=rows.map(function(l){var ph=String(l.phone).replace(/[^\d+]/g,'');
+function kv(k,v){return v?'<div><small>'+k+'</small>'+esc(v)+'</div>':''}
+return'<div class="lead '+esc(l.status)+'" data-id="'+l.id+'"><h3>'+esc(l.name)+'</h3><div class="meta">'+esc(l.created_at)+' UTC · via '+esc(l.source||'direct')+'</div>'
++'<div class="kv2">'+kv('Phone',l.phone)+kv('Email',l.email)+kv('Item',l.item)+kv('Quantity',l.quantity)+kv('Print type',l.method)+kv('Needed by',l.deadline)+kv('Prefers',l.contact_pref)+'</div>'
++(l.details?'<div class="details">'+esc(l.details)+'</div>':'')
++'<div class="acts"><a href="tel:'+esc(ph)+'">Call</a><a href="sms:'+esc(ph)+'">Text</a>'+(l.email?'<a href="mailto:'+esc(l.email)+'">Email</a>':'')
++'<select data-act="status">'+STATUSES.map(function(s){return'<option'+(s===l.status?' selected':'')+'>'+s+'</option>'}).join('')+'</select>'
++'<button class="del" data-act="del">Delete</button></div>'
++'<textarea rows="2" placeholder="Notes (saves when you click away)" data-act="notes">'+esc(l.notes||'')+'</textarea></div>'}).join('')}
+function loadLeads(){api('/leads').then(function(d){LEADS=d.leads;STATUSES=d.statuses;renderLeads()})}
+$('#filter').addEventListener('change',renderLeads);
+var lb=$('#leads');
+function lid(el){return el.closest('.lead').getAttribute('data-id')}
+lb.addEventListener('change',function(e){if(e.target.getAttribute('data-act')==='status'){var id=lid(e.target);api('/leads/'+id,jsonOpt('PATCH',{status:e.target.value})).then(function(){LEADS.forEach(function(l){if(String(l.id)===id)l.status=e.target.value});renderLeads()})}});
+lb.addEventListener('focusout',function(e){if(e.target.getAttribute('data-act')==='notes'){var id=lid(e.target);api('/leads/'+id,jsonOpt('PATCH',{notes:e.target.value}));LEADS.forEach(function(l){if(String(l.id)===id)l.notes=e.target.value})}});
+lb.addEventListener('click',function(e){if(e.target.getAttribute('data-act')==='del'){var id=lid(e.target);if(!confirm('Delete this request permanently? This cannot be undone.'))return;api('/leads/'+id,{method:'DELETE'}).then(function(){LEADS=LEADS.filter(function(l){return String(l.id)!==id});renderLeads()})}});
+
+/* ---------- traffic ---------- */
+var STATS=null;
+function renderStats(){if(!STATS)return;var s=STATS[$('#range').value];
+var items=[['Visitors',s.visitors],['Page views',s.views],['Calls tapped',s.calls],['Texts tapped',s.texts],['Quote requests',s.leads],['Contact rate',s.contactRate+'%']];
+$('#stats').innerHTML=items.map(function(i){return'<div class="stat"><b>'+esc(i[1])+'</b><span>'+i[0]+'</span></div>'}).join('');
+function list(t,a,k){return'<div class="panel"><h3>'+t+'</h3><ul>'+(a.length?a.map(function(x){return'<li><span>'+esc(x[k])+'</span><b>'+x.n+'</b></li>'}).join(''):'<li>No data yet</li>')+'</ul></div>'}
+$('#panels').innerHTML=list('Traffic sources',s.sources,'source')+list('Top pages',s.pages,'path')+list('Devices',s.devices,'device')}
+$('#range').addEventListener('change',renderStats);
+
+loadOrders();loadDeals();loadLeads();api('/stats').then(function(d){STATS=d;renderStats()});
+</script></body></html>
