@@ -104,7 +104,55 @@ db.exec(`
     admin_notes TEXT, source TEXT
   );
   CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
+
+  -- Team & crew stores: one link per team/company, everyone orders and pays for their own gear,
+  -- the shop prints it all together after the store closes. (Replaces Big Cartel-style customer stores.)
+  CREATE TABLE IF NOT EXISTS team_stores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    slug TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,                     -- "Hawks Youth Soccer Fall Gear"
+    org TEXT,                               -- "Hawks Youth Soccer"
+    blurb TEXT,
+    logo TEXT,                              -- /media/products/<file>
+    accent TEXT NOT NULL DEFAULT '#111111',
+    status TEXT NOT NULL DEFAULT 'open',    -- draft | open | closed
+    closes_at TEXT,                         -- YYYY-MM-DD, open through the end of that day
+    password TEXT,                          -- optional access code for private crew stores
+    listed INTEGER NOT NULL DEFAULT 1,      -- show on the public Team Stores page
+    name_cents INTEGER NOT NULL DEFAULT 0,  -- personalization: name on the back
+    number_cents INTEGER NOT NULL DEFAULT 0,-- personalization: number
+    fund_cents INTEGER NOT NULL DEFAULT 0,  -- fundraiser: amount per item that goes back to the team
+    fund_goal_cents INTEGER NOT NULL DEFAULT 0,
+    handoff TEXT,                           -- how people get their gear
+    contact_name TEXT, contact_email TEXT,  -- organizer (gets the summary when the store closes)
+    closed_notified INTEGER NOT NULL DEFAULT 0,
+    is_sample INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS team_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    store_id INTEGER NOT NULL,
+    product_id INTEGER,                     -- catalog item it started from (reference only)
+    name TEXT NOT NULL,
+    style TEXT NOT NULL DEFAULT 'tee',
+    garment TEXT,
+    design TEXT,                            -- mockup image of the team's design on the garment
+    design_note TEXT,                       -- e.g. "Front: Hawks logo, 2 colors"
+    colors TEXT, sizes TEXT, plus_sizes TEXT, plus_cents INTEGER NOT NULL DEFAULT 0,
+    price_cents INTEGER NOT NULL,
+    personalize INTEGER NOT NULL DEFAULT 0, -- allow name / number
+    active INTEGER NOT NULL DEFAULT 1,
+    sort INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE INDEX IF NOT EXISTS idx_team_items ON team_items(store_id);
 `);
+
+// columns added after the first version of the orders table
+const orderCols = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
+if (!orderCols.includes('team_store_id')) db.exec('ALTER TABLE orders ADD COLUMN team_store_id INTEGER');
+if (!orderCols.includes('recipient')) db.exec('ALTER TABLE orders ADD COLUMN recipient TEXT');
+db.exec('CREATE INDEX IF NOT EXISTS idx_orders_team ON orders(team_store_id)');
 
 /* ---------- starter content (clearly labeled samples, no photos yet) ---------- */
 const SEED = process.env.SEED_SAMPLES !== 'false';
@@ -142,6 +190,38 @@ if (SEED && db.prepare('SELECT COUNT(*) n FROM products').get().n === 0) {
     { slug: 'performance-cap', name: 'Performance Cap', category: 'hats', style: 'hat', garment: 'Structured, curved bill', blurb: 'Lightweight and sharp.', kind: 'hat', colors: 'Black,Royal Blue,Grey,White', sizes: 'One size', plus_sizes: '', plus_cents: 0, min_qty: 12, breaks: B([[12, 2400], [24, 2100], [48, 1900], [72, 1800], [144, 1600]]), sort: 50 },
     { slug: 'cuffed-beanie', name: 'Cuffed Beanie', category: 'hats', style: 'beanie', garment: 'Knit cuffed beanie', blurb: 'Winter on the job site.', kind: 'hat', colors: 'Black,Charcoal,Navy,Safety Orange', sizes: 'One size', plus_sizes: '', plus_cents: 0, min_qty: 12, breaks: B([[12, 1900], [24, 1600], [48, 1400], [72, 1300], [144, 1100]]), sort: 45 },
   ].forEach((p) => ins.run(p));
+}
+
+if (SEED && db.prepare('SELECT COUNT(*) n FROM team_stores').get().n === 0) {
+  const day = (n) => { const d = new Date(Date.now() + n * 864e5); return d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }); };
+  const addStore = db.prepare(`INSERT INTO team_stores (slug,name,org,blurb,accent,status,closes_at,password,listed,name_cents,number_cents,fund_cents,fund_goal_cents,handoff,is_sample)
+    VALUES (@slug,@name,@org,@blurb,@accent,'open',@closes_at,@password,@listed,@name_cents,@number_cents,@fund_cents,@fund_goal_cents,@handoff,1)`);
+  const addItem = db.prepare(`INSERT INTO team_items (store_id,name,style,garment,design_note,colors,sizes,plus_sizes,plus_cents,price_cents,personalize,sort)
+    VALUES (@store_id,@name,@style,@garment,@design_note,@colors,@sizes,@plus_sizes,@plus_cents,@price_cents,@personalize,@sort)`);
+  const ADULT = 'S,M,L,XL,2XL,3XL', YOUTH = 'YXS,YS,YM,YL,YXL';
+  const a = addStore.run({
+    slug: 'hawks-youth-soccer', name: 'Hawks Youth Soccer Fall Gear', org: 'Hawks Youth Soccer', accent: '#1d4ed8',
+    blurb: 'Official team gear for the fall season. Order your size, add a name and number, and it all gets printed together.',
+    closes_at: day(21), password: null, listed: 1, name_cents: 500, number_cents: 300, fund_cents: 300, fund_goal_cents: 50000,
+    handoff: 'Orders are bagged by name and handed out at practice.',
+  }).lastInsertRowid;
+  [
+    { name: 'Team Tee', style: 'tee', garment: 'Soft cotton tee', design_note: 'Front: team logo, 2 colors', colors: 'Royal,White,Sport Grey', sizes: YOUTH + ',' + ADULT, plus_sizes: '2XL,3XL', plus_cents: 200, price_cents: 1800, personalize: 1, sort: 40 },
+    { name: 'Team Hoodie', style: 'hoodie', garment: 'Heavy blend pullover hoodie', design_note: 'Front: team logo, 2 colors', colors: 'Royal,Black,Sport Grey', sizes: YOUTH + ',' + ADULT, plus_sizes: '2XL,3XL', plus_cents: 300, price_cents: 3800, personalize: 1, sort: 30 },
+    { name: 'Parent Long Sleeve', style: 'longsleeve', garment: 'Heavy cotton long sleeve', design_note: 'Front: "Hawks Soccer Parent"', colors: 'Royal,Black', sizes: ADULT, plus_sizes: '2XL,3XL', plus_cents: 200, price_cents: 2400, personalize: 0, sort: 20 },
+    { name: 'Team Beanie', style: 'beanie', garment: 'Knit cuffed beanie', design_note: 'Embroidered team logo', colors: 'Royal,Black', sizes: 'One size', plus_sizes: '', plus_cents: 0, price_cents: 2000, personalize: 0, sort: 10 },
+  ].forEach((i) => addItem.run({ ...i, store_id: a }));
+  const b = addStore.run({
+    slug: 'example-co-crew-store', name: 'Example Co. Crew Store', org: 'Example Co.', accent: '#111111',
+    blurb: 'Crew gear for the Example Co. team. The company covers one shirt, extra pieces are on you.',
+    closes_at: day(14), password: 'crew2026', listed: 0, name_cents: 0, number_cents: 0, fund_cents: 0, fund_goal_cents: 0,
+    handoff: 'Delivered to the shop office. Your foreman hands them out.',
+  }).lastInsertRowid;
+  [
+    { name: 'Crew Tee', style: 'tee', garment: 'Soft cotton tee', design_note: 'Left chest + full back', colors: 'Black,Safety Green,Charcoal', sizes: ADULT, plus_sizes: '2XL,3XL', plus_cents: 200, price_cents: 1400, personalize: 0, sort: 30 },
+    { name: 'Crew Hoodie', style: 'hoodie', garment: 'Heavy blend pullover hoodie', design_note: 'Left chest + full back', colors: 'Black,Charcoal', sizes: ADULT, plus_sizes: '2XL,3XL', plus_cents: 300, price_cents: 3200, personalize: 0, sort: 20 },
+    { name: 'Crew Trucker Cap', style: 'hat', garment: 'Mesh back snapback', design_note: 'Leather patch on the front', colors: 'Black,Charcoal / Black', sizes: 'One size', plus_sizes: '', plus_cents: 0, price_cents: 2200, personalize: 0, sort: 10 },
+  ].forEach((i) => addItem.run({ ...i, store_id: b }));
 }
 
 // Remove abandoned cart items after 14 days (their logo files are cleaned up by the store module)

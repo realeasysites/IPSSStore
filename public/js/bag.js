@@ -19,7 +19,7 @@
     var d = {}; new FormData(form).forEach(function (v, k) { d[k] = v; });
     if (!String(d.name || '').trim()) return say('Add your name.');
     if (String(d.phone || '').replace(/\D/g, '').length < 7) return say('Add a phone number.');
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(d.email || '').trim())) return say('Add your email so we can send your proof.');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(d.email || '').trim())) return say(form.elements.namedItem('recipient') ? 'Add your email for your receipt.' : 'Add your email so we can send your proof.');
     var q = new URLSearchParams(location.search); d.source = q.get('utm_source') || q.get('ref') || '';
     btn.disabled = true; btn.textContent = 'Placing order…';
     fetch('/api/checkout', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) })

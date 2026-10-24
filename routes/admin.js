@@ -63,6 +63,7 @@ const orderOut = (o) => ({
   ...o, items: O.itemsOf(o).map((i) => ({ ...i, artworkIsImage: /\.(png|jpe?g|gif|webp)$/i.test(i.artwork_file || '') })),
   mockups: O.mockupsOf(o).map((m) => ({ ...m, isImage: /\.(png|jpe?g|webp)$/i.test(m.file) })),
   ref: O.ref(o), statusLabel: O.statusLabel(o), trackUrl: O.trackUrl(o),
+  team: (() => { const t = O.teamOf(o); return t ? { id: t.id, name: t.name, handoff: t.handoff, closes_at: t.closes_at } : null; })(),
 });
 api.get('/orders', (req, res) => res.json({ statuses: O.STATUS, orders: db.prepare('SELECT * FROM orders ORDER BY id DESC LIMIT 1000').all().map(orderOut) }));
 api.patch('/orders/:id', J, (req, res) => {
@@ -235,6 +236,158 @@ api.delete('/products/:id', (req, res) => {
   dropPhoto(p.photo);
   db.prepare('DELETE FROM products WHERE id = ?').run(p.id);
   res.json({ ok: true });
+});
+
+/* ---------- team & crew stores ---------- */
+const T = require('../lib/teams');
+const hex = (v) => (/^#[0-9a-f]{6}$/i.test(String(v || '').trim()) ? String(v).trim() : '#111111');
+const dateOrNull = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || '').trim()) ? String(v).trim() : null);
+function storeFields(b) {
+  const name = String(b.name || '').trim().slice(0, 100);
+  if (!name) return { error: 'Give the store a name.' };
+  const email = String(b.contact_email || '').trim().slice(0, 160);
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: 'The organizer email looks off.' };
+  return {
+    name, org: String(b.org || '').trim().slice(0, 100), blurb: String(b.blurb || '').trim().slice(0, 800), accent: hex(b.accent),
+    status: ['draft', 'open', 'closed'].includes(b.status) ? b.status : 'open', closes_at: dateOrNull(b.closes_at),
+    password: String(b.password || '').trim().slice(0, 40) || null, listed: yes(b.listed) ? 1 : 0,
+    name_cents: P.cents(b.name_price), number_cents: P.cents(b.number_price), fund_cents: P.cents(b.fund_price), fund_goal_cents: P.cents(b.fund_goal),
+    handoff: String(b.handoff || '').trim().slice(0, 300), contact_name: String(b.contact_name || '').trim().slice(0, 100), contact_email: email,
+  };
+}
+function itemFields(b) {
+  const name = String(b.name || '').trim().slice(0, 100);
+  const price = P.cents(b.price);
+  if (!name) return { error: 'Give the item a name.' };
+  if (!price) return { error: 'Enter a price, like 18.' };
+  const pid = Number(b.product_id);
+  return {
+    name, price_cents: price, product_id: pid > 0 ? pid : null, style: STYLES.includes(b.style) ? b.style : 'tee', garment: String(b.garment || '').trim().slice(0, 120),
+    design_note: String(b.design_note || '').trim().slice(0, 200), colors: csv(b.colors), sizes: csv(b.sizes) || 'One size', plus_sizes: csv(b.plus_sizes), plus_cents: P.cents(b.plus_price),
+    personalize: yes(b.personalize) ? 1 : 0, active: yes(b.active) ? 1 : 0, sort: Math.round(Number(b.sort)) || 0,
+  };
+}
+const storeOut = (s) => ({ ...s, url: O.site() + '/team/' + s.slug, open: T.isOpen(s), stats: T.stats(s), items: T.itemsOf(s.id, true) });
+const getStore = (id) => db.prepare('SELECT * FROM team_stores WHERE id = ?').get(Number(id));
+const media = (f) => (f ? '/media/products/' + f.filename : '');
+
+api.get('/team-stores', (req, res) => res.json({ today: T.today(), stores: db.prepare('SELECT * FROM team_stores ORDER BY id DESC').all().map(storeOut) }));
+api.post('/team-stores', handle(upload.deal.single('logo')), (req, res) => {
+  const f = storeFields(req.body || {});
+  if (f.error) { if (req.file) remove('deals', req.file.filename); return res.status(400).json({ ok: false, error: f.error }); }
+  const slug = uniqueSlug('team_stores', slugify((req.body || {}).slug || f.name));
+  const info = db.prepare(`INSERT INTO team_stores (slug,name,org,blurb,logo,accent,status,closes_at,password,listed,name_cents,number_cents,fund_cents,fund_goal_cents,handoff,contact_name,contact_email)
+    VALUES (@slug,@name,@org,@blurb,@logo,@accent,@status,@closes_at,@password,@listed,@name_cents,@number_cents,@fund_cents,@fund_goal_cents,@handoff,@contact_name,@contact_email)`)
+    .run({ ...f, slug, logo: media(req.file) });
+  res.json({ ok: true, store: storeOut(getStore(info.lastInsertRowid)) });
+});
+api.patch('/team-stores/:id', handle(upload.deal.single('logo')), (req, res) => {
+  const s = getStore(req.params.id);
+  if (!s) { if (req.file) remove('deals', req.file.filename); return res.status(404).json({ ok: false, error: 'not found' }); }
+  const b = req.body || {};
+  if (b.only_status !== undefined) {
+    if (!['draft', 'open', 'closed'].includes(b.only_status)) return res.status(400).json({ ok: false, error: 'bad status' });
+    // reopening a store whose date already passed: push the closing date out a week so it actually opens
+    const reopen = b.only_status === 'open' && s.closes_at && s.closes_at < T.today();
+    const nd = reopen ? new Date(Date.now() + 7 * 864e5).toLocaleDateString('en-CA', { timeZone: 'America/New_York' }) : s.closes_at;
+    db.prepare('UPDATE team_stores SET status = ?, closes_at = ?, closed_notified = CASE WHEN ? = \'open\' THEN 0 ELSE closed_notified END WHERE id = ?').run(b.only_status, nd, b.only_status, s.id);
+    return res.json({ ok: true, store: storeOut(getStore(s.id)), moved: reopen ? nd : null });
+  }
+  const f = storeFields(b);
+  if (f.error) { if (req.file) remove('deals', req.file.filename); return res.status(400).json({ ok: false, error: f.error }); }
+  let logo = s.logo;
+  if (req.file || yes(b.remove_logo)) { dropPhoto(s.logo); logo = media(req.file); }
+  const slug = b.slug && slugify(b.slug) !== s.slug ? uniqueSlug('team_stores', slugify(b.slug), s.id) : s.slug;
+  const reopened = f.status === 'open' && (s.status !== 'open' || (f.closes_at || '') !== (s.closes_at || ''));
+  db.prepare(`UPDATE team_stores SET slug=@slug,name=@name,org=@org,blurb=@blurb,logo=@logo,accent=@accent,status=@status,closes_at=@closes_at,password=@password,listed=@listed,
+    name_cents=@name_cents,number_cents=@number_cents,fund_cents=@fund_cents,fund_goal_cents=@fund_goal_cents,handoff=@handoff,contact_name=@contact_name,contact_email=@contact_email,
+    closed_notified=@cn,is_sample=0 WHERE id=@id`).run({ ...f, slug, logo, id: s.id, cn: reopened ? 0 : s.closed_notified });
+  res.json({ ok: true, store: storeOut(getStore(s.id)) });
+});
+api.post('/team-stores/:id/duplicate', (req, res) => {
+  const s = getStore(req.params.id);
+  if (!s) return res.status(404).json({ ok: false });
+  const { id, created_at, ...rest } = s;
+  const nid = db.transaction(() => {
+    const info = db.prepare(`INSERT INTO team_stores (${Object.keys(rest).join(',')}) VALUES (${Object.keys(rest).map((k) => '@' + k).join(',')})`)
+      .run({ ...rest, slug: uniqueSlug('team_stores', s.slug + '-copy'), name: s.name + ' (copy)', status: 'draft', logo: '', closed_notified: 0, closes_at: null });
+    T.itemsOf(s.id, true).forEach((it) => {
+      const { id: _i, store_id, ...r } = it;
+      db.prepare(`INSERT INTO team_items (store_id,${Object.keys(r).join(',')}) VALUES (@store_id,${Object.keys(r).map((k) => '@' + k).join(',')})`).run({ ...r, store_id: info.lastInsertRowid, design: '' });
+    });
+    return info.lastInsertRowid;
+  })();
+  res.json({ ok: true, store: storeOut(getStore(nid)) });
+});
+api.delete('/team-stores/:id', (req, res) => {
+  const s = getStore(req.params.id);
+  if (!s) return res.json({ ok: false });
+  dropPhoto(s.logo);
+  T.itemsOf(s.id, true).forEach((it) => dropPhoto(it.design));
+  db.prepare('DELETE FROM team_items WHERE store_id = ?').run(s.id);
+  db.prepare('DELETE FROM team_stores WHERE id = ?').run(s.id);
+  res.json({ ok: true }); // orders already placed stay in Orders
+});
+
+api.post('/team-stores/:id/items', handle(upload.deal.single('design')), (req, res) => {
+  const s = getStore(req.params.id);
+  const f = itemFields(req.body || {});
+  if (!s || f.error) { if (req.file) remove('deals', req.file.filename); return res.status(s ? 400 : 404).json({ ok: false, error: f.error || 'not found' }); }
+  db.prepare(`INSERT INTO team_items (store_id,product_id,name,style,garment,design,design_note,colors,sizes,plus_sizes,plus_cents,price_cents,personalize,active,sort)
+    VALUES (@store_id,@product_id,@name,@style,@garment,@design,@design_note,@colors,@sizes,@plus_sizes,@plus_cents,@price_cents,@personalize,@active,@sort)`).run({ ...f, store_id: s.id, design: media(req.file) });
+  res.json({ ok: true, store: storeOut(s) });
+});
+api.patch('/team-items/:id', handle(upload.deal.single('design')), (req, res) => {
+  const it = T.itemById(req.params.id);
+  if (!it) { if (req.file) remove('deals', req.file.filename); return res.status(404).json({ ok: false, error: 'not found' }); }
+  const b = req.body || {};
+  if (b.only_active !== undefined) { db.prepare('UPDATE team_items SET active = ? WHERE id = ?').run(yes(b.only_active) ? 1 : 0, it.id); return res.json({ ok: true }); }
+  const f = itemFields(b);
+  if (f.error) { if (req.file) remove('deals', req.file.filename); return res.status(400).json({ ok: false, error: f.error }); }
+  let design = it.design;
+  if (req.file || yes(b.remove_design)) { dropPhoto(it.design); design = media(req.file); }
+  db.prepare(`UPDATE team_items SET product_id=@product_id,name=@name,style=@style,garment=@garment,design=@design,design_note=@design_note,colors=@colors,sizes=@sizes,plus_sizes=@plus_sizes,
+    plus_cents=@plus_cents,price_cents=@price_cents,personalize=@personalize,active=@active,sort=@sort WHERE id=@id`).run({ ...f, design, id: it.id });
+  res.json({ ok: true });
+});
+api.delete('/team-items/:id', (req, res) => {
+  const it = T.itemById(req.params.id);
+  if (!it) return res.json({ ok: false });
+  dropPhoto(it.design);
+  db.prepare('DELETE FROM team_items WHERE id = ?').run(it.id);
+  res.json({ ok: true });
+});
+
+// Close-out report: print run by item / color / size, names + numbers to press, and a packing list by person.
+function report(s) {
+  const orders = T.paidOrders(s.id);
+  const people = orders.map((o) => ({ id: o.id, ref: O.ref(o), name: o.name, recipient: o.recipient || '', phone: o.phone, email: o.email, status: o.status, statusLabel: O.statusLabel(o), total: o.total_cents,
+    lines: O.itemsOf(o).map((i) => ({ item: i.product.replace(s.name + ': ', ''), color: i.color, size: i.size || Object.keys(i.sizes)[0], qty: i.qty, name: i.name || '', number: i.number || '' })) }));
+  const run = {};
+  people.forEach((p) => p.lines.forEach((l) => {
+    const r = (run[l.item] = run[l.item] || { colors: {}, sizes: {}, pers: [] });
+    r.colors[l.color || '—'] = r.colors[l.color || '—'] || {};
+    r.colors[l.color || '—'][l.size] = (r.colors[l.color || '—'][l.size] || 0) + l.qty;
+    r.sizes[l.size] = 1;
+    if (l.name || l.number) r.pers.push({ who: p.recipient || p.name, color: l.color, size: l.size, qty: l.qty, name: l.name, number: l.number, ref: p.ref });
+  }));
+  return { store: storeOut(s), people, run };
+}
+api.get('/team-stores/:id/report', (req, res) => {
+  const s = getStore(req.params.id);
+  if (!s) return res.status(404).json({ error: 'not found' });
+  res.json(report(s));
+});
+api.get('/team-stores/:id/orders.csv', (req, res) => {
+  const s = getStore(req.params.id);
+  if (!s) return res.status(404).send('Not found');
+  const r = report(s);
+  const cell = (v) => { let x = v == null ? '' : String(v); if (/^[=+\-@]/.test(x)) x = "'" + x; return '"' + x.replace(/"/g, '""') + '"'; };
+  const rows = [['Order', 'Status', 'Ordered by', 'For', 'Phone', 'Email', 'Item', 'Color', 'Size', 'Qty', 'Name on back', 'Number', 'Order total']];
+  r.people.forEach((p) => p.lines.forEach((l, k) => rows.push([p.ref, p.statusLabel, p.name, p.recipient, p.phone, p.email, l.item, l.color, l.size, l.qty, l.name, l.number, k ? '' : O.money(p.total)])));
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${s.slug}-orders.csv"`);
+  res.send(rows.map((row) => row.map(cell).join(',')).join('\n'));
 });
 
 /* ---------- pricing rules ---------- */

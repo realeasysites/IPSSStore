@@ -72,14 +72,28 @@ textarea.notes{width:100%;margin-top:10px;border:1px solid #ccc;border-radius:8p
 .panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
 .panel{background:#fff;border-radius:12px;padding:14px}.panel h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;color:#666}
 .panel li{display:flex;justify-content:space-between;padding:3px 0;font-size:14px;list-style:none}.panel ul{margin:0;padding:0}
-@media (max-width:720px){.g{grid-template-columns:1fr}.g .w2{grid-column:auto}.item{grid-template-columns:72px 1fr}.item .logo{width:72px;height:72px}.list-row{grid-template-columns:56px 1fr}.list-row .acts{grid-column:1/-1}.rows .r,.rows .r.three{grid-template-columns:1fr 1fr}}
-@media print{header,.tabs,.bar,.no-print{display:none!important}body{background:#fff}main{padding:0}.sheet{padding:0}}
+.intro{color:#555;margin:-6px 0 14px;font-size:14px;max-width:760px}
+.tb{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:24px;overflow:hidden}
+.tb img{width:100%;height:100%;object-fit:contain;background:#fff}
+.titems{border-top:1px solid #eee;margin-top:12px;padding-top:8px}
+.titem{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:6px 0}
+.titem .th{width:48px;height:48px;border-radius:6px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.titem .th img{width:80%}.titem .th img.photo{width:100%;height:100%;object-fit:cover}
+.titem h4{margin:0;font-size:14px}.titem p{margin:0;font-size:13px;color:#707072}
+.titem .acts{margin:0}.titem .acts button{padding:5px 10px;font-size:12.5px}
+.sumrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 0 14px}
+.person{border-top:1px solid #ddd;padding:10px 0;break-inside:avoid}
+.person h4{margin:0 0 4px;font-size:15px}.person h4 small{font-weight:400;color:#777}
+.person ul{margin:0;padding-left:0;list-style:none;font-size:14px}.person li:before{content:"☐ ";color:#999}
+@media (max-width:720px){.titem{grid-template-columns:48px 1fr}.titem .acts{grid-column:1/-1}.g{grid-template-columns:1fr}.g .w2{grid-column:auto}.item{grid-template-columns:72px 1fr}.item .logo{width:72px;height:72px}.list-row{grid-template-columns:56px 1fr}.list-row .acts{grid-column:1/-1}.rows .r,.rows .r.three{grid-template-columns:1fr 1fr}}
+@media print{header,.tabs,.bar,.no-print,#teamList{display:none!important}body{background:#fff}main{padding:0}.sheet{padding:0}}
 </style></head><body>
-<header><img src="/img/logo-wordmark.png" alt=""><h1>Dashboard</h1><a href="/" target="_blank">View site</a><a href="/packages" target="_blank">Packages</a><a href="/admin/logout">Sign out</a></header>
+<header><img src="/img/logo-wordmark.png" alt=""><h1>Dashboard</h1><a href="/" target="_blank">View site</a><a href="/packages" target="_blank">Packages</a><a href="/team-stores" target="_blank">Team stores</a><a href="/admin/logout">Sign out</a></header>
 <main>
 <nav class="tabs" id="tabs">
   <button data-v="orders" class="on">Orders <span class="badge" id="ordBadge" hidden></span></button>
   <button data-v="print">Print sheet</button>
+  <button data-v="teams">Team stores</button>
   <button data-v="packages">Package deals</button>
   <button data-v="catalog">Custom catalog</button>
   <button data-v="pricing">Pricing rules</button>
@@ -101,6 +115,66 @@ textarea.notes{width:100%;margin-top:10px;border:1px solid #ccc;border-radius:8p
     <label><input type="checkbox" class="ps" value="paid" checked> Paid</label><label><input type="checkbox" class="ps" value="approved" checked> Approved</label><label><input type="checkbox" class="ps" value="printing" checked> Printing</label>
     <button class="btn dark" onclick="window.print()">Print</button></div>
   <div class="sheet" id="sheet"></div>
+</section>
+
+<!-- TEAM STORES -->
+<section class="view" id="v-teams" hidden>
+  <div id="teamList">
+  <div class="bar"><h2>Team &amp; crew stores</h2><button class="btn dark" id="newStore">+ New team store</button></div>
+  <p class="intro">Each store gets its own link. Everyone orders their own size and pays for their own gear. When the store closes you get one print sheet and a packing list by name. Stores close on their own at the end of the closing date and you get an email.</p>
+  <form class="ed" id="storeForm" hidden>
+    <h3 id="storeTitle">New team store</h3><p class="help">Set up the store, save it, then add the gear.</p>
+    <input type="hidden" name="id">
+    <div class="g">
+      <label class="w2">Store name<input name="name" required placeholder="Hawks Youth Soccer Fall Gear"></label>
+      <label>Status<select name="status"><option value="open">Open (taking orders)</option><option value="draft">Draft (hidden, set it up first)</option><option value="closed">Closed</option></select></label>
+      <label class="w2">Team, league or company<input name="org" placeholder="Hawks Youth Soccer"></label>
+      <label>Closes at the end of<input name="closes_at" type="date"></label>
+      <label class="w3">Description <small>shown at the top of the store</small><textarea name="blurb" rows="2"></textarea></label>
+      <label class="w2">How people get their gear<input name="handoff" placeholder="Orders are bagged by name and handed out at practice."></label>
+      <label>Store link <small>/team/…</small><input name="slug" placeholder="made from the name"></label>
+      <label>Team logo <small>(PNG or JPG)</small><input name="logo" type="file" accept=".jpg,.jpeg,.png,.webp"></label>
+      <label>Team color<input name="accent" type="color" value="#111111"></label>
+      <label>Store code <small>optional, makes it private</small><input name="password" placeholder="crew2026" autocomplete="off"></label>
+      <label>Name on back ($ each) <small>0 = free</small><input name="name_price" inputmode="decimal" placeholder="5"></label>
+      <label>Number ($ each) <small>0 = free</small><input name="number_price" inputmode="decimal" placeholder="3"></label>
+      <div></div>
+      <label>Fundraiser ($ per item) <small>goes back to the team</small><input name="fund_price" inputmode="decimal" placeholder="0"></label>
+      <label>Fundraiser goal ($) <small>optional</small><input name="fund_goal" inputmode="decimal"></label>
+      <div></div>
+      <label>Organizer name<input name="contact_name" placeholder="Coach Smith"></label>
+      <label class="w2">Organizer email <small>gets a summary when the store closes</small><input name="contact_email" type="email"></label>
+      <label class="row"><input type="checkbox" name="listed" value="1" checked> Show on the public Team Stores page</label>
+      <label class="row" id="storeRmLogo" hidden><input type="checkbox" name="remove_logo" value="1"> Remove current logo</label>
+    </div>
+    <div class="acts"><button class="btn dark" type="submit">Save store</button><button class="btn" type="button" data-cancel>Cancel</button><span class="msg" id="storeMsg"></span></div>
+  </form>
+  <form class="ed" id="itemForm" hidden>
+    <h3 id="itemTitle">Add gear</h3><p class="help">Pick a blank from your catalog to fill in the colors and sizes, then set the store price. Upload a picture of the design on the garment if you have one.</p>
+    <input type="hidden" name="id"><input type="hidden" name="store_id">
+    <div class="g">
+      <label class="w3">Start from a catalog item <small>(optional, fills in the details)</small><select name="product_id" id="itemFrom"><option value="">Choose a blank…</option></select></label>
+      <label class="w2">Item name<input name="name" required placeholder="Team Tee"></label>
+      <label>Store price ($ each)<input name="price" inputmode="decimal" required placeholder="18"></label>
+      <label>Placeholder picture<select name="style"><option value="tee">T-shirt</option><option value="longsleeve">Long sleeve</option><option value="hoodie">Hoodie</option><option value="crewneck">Crewneck</option><option value="youth">Youth</option><option value="premium">Premium tee</option><option value="hat">Hat</option><option value="beanie">Beanie</option></select></label>
+      <label>Blank / garment<input name="garment"></label>
+      <label>Design picture <small>(optional)</small><input name="design" type="file" accept=".jpg,.jpeg,.png,.webp"></label>
+      <label class="w3">Design note <small>shown to buyers and on the print sheet</small><input name="design_note" placeholder="Front: team logo, 2 colors"></label>
+      <label class="w2">Colors <small>comma separated</small><input name="colors"></label>
+      <label>Order on page<input name="sort" type="number" value="0"></label>
+      <label class="w2">Sizes <small>comma separated</small><input name="sizes" placeholder="YS,YM,YL,S,M,L,XL,2XL"></label>
+      <div></div>
+      <label class="w2">Plus sizes that cost more<input name="plus_sizes" placeholder="2XL,3XL"></label>
+      <label>Plus size charge ($ each)<input name="plus_price" inputmode="decimal"></label>
+      <label class="row"><input type="checkbox" name="personalize" value="1"> Allow name &amp; number</label>
+      <label class="row"><input type="checkbox" name="active" value="1" checked> Show in the store</label>
+      <label class="row" id="itemRmDesign" hidden><input type="checkbox" name="remove_design" value="1"> Remove current picture</label>
+    </div>
+    <div class="acts"><button class="btn dark" type="submit">Save item</button><button class="btn" type="button" data-cancel>Cancel</button><span class="msg" id="itemMsg"></span></div>
+  </form>
+  <div id="stores"></div>
+  </div>
+  <div id="report" hidden></div>
 </section>
 
 <!-- PACKAGES -->
@@ -227,14 +301,14 @@ function renderOrders(){var f=$('#ordFilter').value;var rows=ORDERS.filter(funct
     var quick='';
     if(o.needs_mockup&&(o.status==='paid'||o.status==='changes_requested'))quick='<label class="btn dark">Upload proof &amp; send<input type="file" multiple accept=".png,.jpg,.jpeg,.webp,.pdf" data-a="proof"></label>';
     else if(o.status==='mockup_sent')quick='<label class="btn">Replace proof<input type="file" multiple accept=".png,.jpg,.jpeg,.webp,.pdf" data-a="proof"></label>';
-    else if(o.status==='paid'&&!o.needs_mockup)quick='<button class="btn dark" data-a="go" data-to="printing">Start printing</button>';
+    else if(o.status==='paid'&&!o.needs_mockup)quick='<button class="btn dark" data-a="go" data-to="printing">Start printing</button>'+(o.team?'<span class="meta" style="margin:0">Prints with the team store'+(o.team.closes_at?' after '+esc(o.team.closes_at):'')+'</span>':'');
     else if(NEXT[o.status])quick='<button class="btn dark" data-a="go" data-to="'+NEXT[o.status][0]+'">'+NEXT[o.status][1]+'</button>';
     var hot=['paid','changes_requested','approved'].indexOf(o.status)>-1;
     return'<div class="card st-'+esc(o.status)+'" data-id="'+o.id+'"><h3>'+esc(o.ref)+' · '+esc(o.name)+' · '+money(o.total_cents)+'<span class="pill'+(hot?' act':'')+'">'+esc(o.statusLabel)+'</span>'+(o.payment_mode==='demo'?'<span class="pill demo">DEMO</span>':'')+'</h3>'
-    +'<div class="meta">'+esc(o.created_at)+' UTC · '+o.items.length+' item'+(o.items.length>1?'s':'')+' · '+o.items.reduce(function(t,i){return t+i.qty},0)+' pieces</div>'
+    +'<div class="meta">'+(o.team?'<b>Team store: '+esc(o.team.name)+'</b> · ':'')+esc(o.created_at)+' UTC · '+o.items.length+' item'+(o.items.length>1?'s':'')+' · '+o.items.reduce(function(t,i){return t+i.qty},0)+' pieces</div>'
     +(o.status==='changes_requested'&&o.change_note?'<div class="alert"><b>Customer asked for changes:</b> '+esc(o.change_note)+'</div>':'')
     +items
-    +'<div class="kv">'+kv('Phone',o.phone)+kv('Email',o.email)+kv('Getting it',o.fulfillment==='delivery'?'Delivery: '+(o.address||''):'Pickup')+kv('Need by',o.need_by)+kv('Order notes',o.notes)+'</div>'
+    +'<div class="kv">'+kv('Phone',o.phone)+kv('Email',o.email)+kv('For',o.recipient)+kv('Getting it',o.team?(o.team.handoff||'With the team store'):o.fulfillment==='delivery'?'Delivery: '+(o.address||''):'Pickup')+kv('Need by',o.need_by)+kv('Order notes',o.notes)+'</div>'
     +proofs
     +'<div class="acts">'+quick+'<a href="tel:'+esc(ph)+'">Call</a><a href="sms:'+esc(ph)+'">Text</a><a href="mailto:'+esc(o.email)+'">Email</a><a href="'+esc(o.trackUrl)+'" target="_blank">Customer view</a>'
     +'<select data-a="status">'+Object.keys(LABELS).map(function(s){return'<option value="'+s+'"'+(s===o.status?' selected':'')+'>'+esc(LABELS[s])+'</option>'}).join('')+'</select><button class="del" data-a="del">Delete</button></div>'
@@ -254,12 +328,13 @@ $('#orders').addEventListener('focusout',function(e){if(e.target.getAttribute('d
 /* ================= PRINT SHEET ================= */
 $$('.ps').forEach(function(c){c.addEventListener('change',renderSheet)});
 var SIZE_ORDER=['YXS','YS','YM','YL','YXL','XS','S','M','L','XL','2XL','3XL','4XL','5XL','One size'];
-function renderSheet(){var st=$$('.ps:checked').map(function(c){return c.value});var rows=ORDERS.filter(function(o){return st.indexOf(o.status)>-1});
-  if(!rows.length){$('#sheet').innerHTML='<p>Nothing to print for those statuses.</p>';return}
+function renderSheet(){var st=$$('.ps:checked').map(function(c){return c.value});var all=ORDERS.filter(function(o){return st.indexOf(o.status)>-1});
+  var rows=all.filter(function(o){return!o.team}),tn=all.length-rows.length;var note=tn?'<p class="meta no-print">'+tn+' team store order'+(tn>1?'s are':' is')+' not on this sheet. Team stores print together from Team stores &gt; Print sheet &amp; packing list.</p>':'';
+  if(!rows.length){$('#sheet').innerHTML=note+'<p>Nothing to print for those statuses.</p>';return}
   var groups={};
   rows.forEach(function(o){o.items.forEach(function(i){var g=i.product+(i.decoration?' · '+i.decoration:'');var G=groups[g]=groups[g]||{sizes:{},colors:{},orders:{}};G.orders[o.ref]=1;
     var cl=i.color||'—';G.colors[cl]=G.colors[cl]||{};Object.keys(i.sizes||{}).forEach(function(s){G.sizes[s]=1;G.colors[cl][s]=(G.colors[cl][s]||0)+i.sizes[s]})})});
-  var html='<p style="margin:0;color:#666">'+rows.length+' order'+(rows.length>1?'s':'')+': '+rows.map(function(o){return esc(o.ref+' '+o.name)}).join(', ')+'</p>';
+  var html=note+'<p style="margin:0;color:#666">'+rows.length+' order'+(rows.length>1?'s':'')+': '+rows.map(function(o){return esc(o.ref+' '+o.name)}).join(', ')+'</p>';
   Object.keys(groups).forEach(function(g){var G=groups[g];var sz=Object.keys(G.sizes).sort(function(a,b){var x=SIZE_ORDER.indexOf(a),y=SIZE_ORDER.indexOf(b);return(x<0?99:x)-(y<0?99:y)});
     html+='<h3>'+esc(g)+' <small style="font-weight:400;color:#888">('+Object.keys(G.orders).join(', ')+')</small></h3><table><tr><th>Color</th>'+sz.map(function(s){return'<th>'+esc(s)+'</th>'}).join('')+'<th>Total</th></tr>'
     +Object.keys(G.colors).map(function(c){var t=0;return'<tr><td>'+esc(c)+'</td>'+sz.map(function(s){var n=G.colors[c][s]||0;t+=n;return'<td>'+(n||'')+'</td>'}).join('')+'<td class="tot">'+t+'</td></tr>'}).join('')+'</table>'});
@@ -271,6 +346,68 @@ function openEd(form,title,data,fill){form.hidden=false;form.reset();form.queryS
 $$('[data-cancel]').forEach(function(b){b.addEventListener('click',function(){b.closest('form').hidden=true})});
 function thumb(x){return x.photo?'<img class="photo" src="'+esc(x.photo)+'" alt="">':'<img src="/img/ph/'+esc(x.style||'tee')+'.svg" alt="">'}
 function copyLink(url){(navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(function(){toast('Link copied. Paste it in your post.')},function(){prompt('Copy this link:',url)})}
+
+
+/* ================= TEAM STORES ================= */
+var STORES=[],TODAY='',sf2=$('#storeForm'),itf=$('#itemForm');
+function loadStores(){return api('/team-stores').then(function(d){STORES=d.stores;TODAY=d.today;renderStores()})}
+function badge(s){if(s.logo)return'<span class="tb"><img src="'+esc(s.logo)+'" alt=""></span>';var w=String(s.org||s.name).split(/\s+/).filter(Boolean);var ini=(w.length>1?w[0][0]+w[1][0]:(w[0]||'T').slice(0,2)).toUpperCase();
+  var c=/^#[0-9a-f]{6}$/i.test(s.accent)?s.accent:'#111';var n=parseInt(c.slice(1),16);var ink=(0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255))>165?'#111':'#fff';return'<span class="tb" style="background:'+c+';color:'+ink+'">'+esc(ini)+'</span>'}
+function stLabel(s){if(s.status==='draft')return'<span class="pill off">Draft</span>';if(s.open)return'<span class="pill act">Open</span>';return'<span class="pill">Closed</span>'}
+function renderStores(){if(!STORES.length){$('#stores').innerHTML='<div class="empty">No team stores yet. Click New team store.</div>';return}
+  $('#stores').innerHTML=STORES.map(function(s){var t=s.stats;
+    var items=s.items.map(function(i){return'<div class="titem" data-item="'+i.id+'"><div class="th">'+(i.design?'<img class="photo" src="'+esc(i.design)+'" alt="">':'<img src="/img/ph/'+esc(i.style)+'.svg" alt="">')+'</div><div><h4>'+esc(i.name)+(i.active?'':'<span class="pill off">Hidden</span>')+'</h4><p>'+money(i.price_cents)+' · '+esc(String(i.colors||'').split(',').join(', '))+' · '+esc(String(i.sizes||'').split(',').join(', '))+(i.personalize?' · name &amp; number':'')+'</p></div>'
+      +'<div class="acts"><button data-a="iedit">Edit</button><button data-a="itoggle">'+(i.active?'Hide':'Show')+'</button><button class="del" data-a="idel">Delete</button></div></div>'}).join('');
+    return'<div class="card" data-id="'+s.id+'"><div class="list-row"><div class="th" style="background:none">'+badge(s)+'</div><div><h3>'+esc(s.name)+stLabel(s)+(s.password?'<span class="pill">Private · code '+esc(s.password)+'</span>':'')+(s.is_sample?'<span class="pill demo">Sample</span>':'')+'</h3>'
+    +'<div class="meta">'+(s.closes_at?(s.open?'Closes ':'Closed ')+esc(s.closes_at):'No closing date')+' · <b>'+t.orders+'</b> orders · <b>'+t.pieces+'</b> pieces · <b>'+money(t.sales)+'</b> sales'+(s.fund_cents?' · <b>'+money(t.raised)+'</b> raised for the team':'')+'</div><div class="meta">'+esc(s.url)+'</div></div></div>'
+    +'<div class="acts"><button class="btn dark" data-a="report">Print sheet &amp; packing list</button><button data-a="copy">Copy link</button><a href="'+esc(s.url)+'" target="_blank">View store</a><button data-a="edit">Edit</button>'
+    +(s.open?'<button data-a="status" data-to="closed">Close store</button>':'<button data-a="status" data-to="open">'+(s.status==='draft'?'Open store':'Reopen')+'</button>')+'<button data-a="dup">Duplicate</button><button class="del" data-a="del">Delete</button></div>'
+    +'<div class="titems"><b style="font-size:13px;text-transform:uppercase;color:#666">Gear in this store ('+s.items.length+')</b>'+(items||'<p class="meta">No gear yet.</p>')+'<button class="btn" data-a="iadd" style="margin-top:6px">+ Add gear</button></div></div>'}).join('')}
+$('#newStore').addEventListener('click',function(){openEd(sf2,'New team store',null,function(){F(sf2,'status').value='open';F(sf2,'accent').value='#111111';F(sf2,'listed').checked=true;$('#storeRmLogo').hidden=true;
+  var d=new Date(Date.now()+14*864e5);F(sf2,'closes_at').value=d.toISOString().slice(0,10);F(sf2,'handoff').value='Pick up at Imagepro in Biddeford. We will text you when it is ready.'})});
+function fillFrom(){var sel=$('#itemFrom');sel.innerHTML='<option value="">Choose a blank…</option>'+PRODS.map(function(p){return'<option value="'+p.id+'">'+esc(p.name)+(p.garment?' · '+esc(p.garment):'')+'</option>'}).join('')}
+$('#itemFrom').addEventListener('change',function(){var p=PRODS.filter(function(x){return String(x.id)===this.value},this)[0];if(!p)return;
+  if(!F(itf,'name').value)F(itf,'name').value=p.name;F(itf,'style').value=p.style;F(itf,'garment').value=p.garment||'';F(itf,'colors').value=p.colors||'';F(itf,'sizes').value=p.sizes||'';F(itf,'plus_sizes').value=p.plus_sizes||'';F(itf,'plus_price').value=p.plus_cents?dollars(p.plus_cents):''});
+function openItem(card,s,i){fillFrom();card.appendChild(itf);openEd(itf,i?'Edit '+i.name:'Add gear to '+s.name,i,function(i){F(itf,'store_id').value=s.id;$('#itemRmDesign').hidden=!(i&&i.design);
+  if(!i){F(itf,'active').checked=true;F(itf,'personalize').checked=!!(s.name_cents||s.number_cents);return}
+  ['name','style','garment','design_note','colors','sizes','plus_sizes','sort'].forEach(function(k){F(itf,k).value=i[k]==null?'':i[k]});F(itf,'product_id').value=i.product_id||'';
+  F(itf,'price').value=dollars(i.price_cents);F(itf,'plus_price').value=i.plus_cents?dollars(i.plus_cents):'';F(itf,'personalize').checked=!!i.personalize;F(itf,'active').checked=!!i.active})}
+$('#stores').addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b||b.tagName==='A')return;var a=b.getAttribute('data-a');var card=b.closest('.card');if(!card)return;var id=card.getAttribute('data-id');
+  var s=STORES.filter(function(x){return String(x.id)===id})[0];var row=b.closest('[data-item]');var it=row&&s.items.filter(function(x){return String(x.id)===row.getAttribute('data-item')})[0];
+  if(a==='copy')copyLink(s.url);
+  if(a==='report')showReport(s.id);
+  if(a==='edit'){$('#teamList').insertBefore(sf2,$('#stores'));openEd(sf2,'Edit '+s.name,s,function(s){['name','org','status','closes_at','blurb','handoff','slug','accent','password','contact_name','contact_email'].forEach(function(k){F(sf2,k).value=s[k]==null?'':s[k]});
+    F(sf2,'name_price').value=dollars(s.name_cents);F(sf2,'number_price').value=dollars(s.number_cents);F(sf2,'fund_price').value=dollars(s.fund_cents);F(sf2,'fund_goal').value=s.fund_goal_cents?dollars(s.fund_goal_cents):'';F(sf2,'listed').checked=!!s.listed;$('#storeRmLogo').hidden=!s.logo})}
+  if(a==='status'){var to=b.getAttribute('data-to');if(to==='closed'&&!confirm('Close this store now? People won’t be able to order anymore.'))return;var fd=new FormData();fd.append('only_status',to);
+    api('/team-stores/'+id,{method:'PATCH',body:fd}).then(function(r){toast(to==='closed'?'Store closed':r.moved?'Store open. Closing date moved to '+r.moved:'Store open');loadStores()})}
+  if(a==='dup')api('/team-stores/'+id+'/duplicate',{method:'POST'}).then(function(){toast('Copied as a draft. Edit it, set a closing date and open it.');loadStores()});
+  if(a==='del'){if(!confirm('Delete this store and its gear? The link stops working. Orders already placed stay in Orders.'))return;api('/team-stores/'+id,{method:'DELETE'}).then(function(){toast('Deleted');loadStores()})}
+  if(a==='iadd')openItem(card,s,null);
+  if(a==='iedit')openItem(card,s,it);
+  if(a==='itoggle'){var f2=new FormData();f2.append('only_active',it.active?'0':'1');api('/team-items/'+it.id,{method:'PATCH',body:f2}).then(function(){toast(it.active?'Hidden from the store':'Showing in the store');loadStores()})}
+  if(a==='idel'){if(!confirm('Remove '+it.name+' from this store?'))return;api('/team-items/'+it.id,{method:'DELETE'}).then(function(){toast('Removed');loadStores()})}});
+sf2.addEventListener('submit',function(e){e.preventDefault();var fd=new FormData(sf2),id=fd.get('id');fd.delete('id');
+  fd.set('listed',F(sf2,'listed').checked?'1':'0');fd.set('remove_logo',F(sf2,'remove_logo').checked?'1':'0');if(!fd.get('logo')||!fd.get('logo').size)fd.delete('logo');
+  api(id?'/team-stores/'+id:'/team-stores',{method:id?'PATCH':'POST',body:fd}).then(function(r){if(!r.ok){$('#storeMsg').textContent=r.error||'Could not save';return}sf2.hidden=true;toast(id?'Store saved':'Store created. Now add the gear.');loadStores()})});
+itf.addEventListener('submit',function(e){e.preventDefault();var fd=new FormData(itf),id=fd.get('id'),sid=fd.get('store_id');fd.delete('id');fd.delete('store_id');
+  fd.set('personalize',F(itf,'personalize').checked?'1':'0');fd.set('active',F(itf,'active').checked?'1':'0');fd.set('remove_design',F(itf,'remove_design').checked?'1':'0');if(!fd.get('design')||!fd.get('design').size)fd.delete('design');
+  api(id?'/team-items/'+id:'/team-stores/'+sid+'/items',{method:id?'PATCH':'POST',body:fd}).then(function(r){if(!r.ok){$('#itemMsg').textContent=r.error||'Could not save';return}itf.hidden=true;$('#teamList').appendChild(itf);toast('Gear saved');loadStores()})});
+
+function showReport(id){api('/team-stores/'+id+'/report').then(function(r){var s=r.store,t=s.stats;
+  var html='<div class="bar no-print"><button class="btn" id="repBack">← All team stores</button><h2></h2><a href="/admin/api/team-stores/'+s.id+'/orders.csv">Download CSV</a><button class="btn dark" onclick="window.print()">Print</button></div>'
+    +'<div class="sheet"><h2 style="margin:0">'+esc(s.name)+'</h2><p class="meta">'+(s.closes_at?(s.open?'Closes ':'Closed ')+esc(s.closes_at)+' · ':'')+esc(s.handoff||'')+'</p>'
+    +'<div class="sumrow"><div class="stat"><b>'+t.orders+'</b><span>Orders</span></div><div class="stat"><b>'+t.pieces+'</b><span>Pieces</span></div><div class="stat"><b>'+money(t.sales)+'</b><span>Sales</span></div>'+(s.fund_cents?'<div class="stat"><b>'+money(t.raised)+'</b><span>Raised for team</span></div>':'')+'</div>';
+  var keys=Object.keys(r.run);
+  if(!keys.length)html+='<p>No paid orders yet. When people order, the print run and packing list show up here.</p>';
+  keys.forEach(function(k){var G=r.run[k];var sz=Object.keys(G.sizes).sort(function(a,b){var x=SIZE_ORDER.indexOf(a),y=SIZE_ORDER.indexOf(b);return(x<0?99:x)-(y<0?99:y)});
+    html+='<h3>'+esc(k)+'</h3><table><tr><th>Color</th>'+sz.map(function(z){return'<th>'+esc(z)+'</th>'}).join('')+'<th>Total</th></tr>'
+      +Object.keys(G.colors).map(function(c){var tt=0;return'<tr><td>'+esc(c)+'</td>'+sz.map(function(z){var n=G.colors[c][z]||0;tt+=n;return'<td>'+(n||'')+'</td>'}).join('')+'<td class="tot">'+tt+'</td></tr>'}).join('')+'</table>';
+    if(G.pers.length)html+='<p style="margin:10px 0 4px;font-weight:700">Names &amp; numbers</p><table><tr><th>For</th><th>Color</th><th>Size</th><th>Qty</th><th>Name on back</th><th>Number</th></tr>'+G.pers.map(function(p){return'<tr><td>'+esc(p.who)+' <small>'+esc(p.ref)+'</small></td><td>'+esc(p.color)+'</td><td>'+esc(p.size)+'</td><td>'+p.qty+'</td><td><b>'+esc(p.name)+'</b></td><td><b>'+esc(p.number)+'</b></td></tr>'}).join('')+'</table>'});
+  if(r.people.length){html+='<h3>Packing list by person ('+r.people.length+')</h3>'+r.people.slice().sort(function(a,b){return(a.recipient||a.name).localeCompare(b.recipient||b.name)}).map(function(p){return'<div class="person"><h4>'+esc(p.recipient||p.name)+' <small>'+esc(p.ref)+(p.recipient?' · ordered by '+esc(p.name):'')+' · '+esc(p.phone)+'</small></h4><ul>'
+    +p.lines.map(function(l){return'<li>'+l.qty+' × '+esc(l.item)+' · '+esc(l.color)+' · '+esc(l.size)+(l.name?' · <b>'+esc(l.name)+'</b>':'')+(l.number?' · <b>#'+esc(l.number)+'</b>':'')+'</li>'}).join('')+'</ul></div>'}).join('')}
+  html+='</div>';
+  $('#report').innerHTML=html;$('#report').hidden=false;$('#teamList').hidden=true;window.scrollTo(0,0);
+  $('#repBack').addEventListener('click',function(){$('#report').hidden=true;$('#teamList').hidden=false})})}
 
 /* ================= PACKAGES ================= */
 var PKGS=[],pf=$('#pkgForm');
@@ -351,5 +488,5 @@ function renderStats(){if(!STATS)return;var s=STATS[$('#range').value];
   $('#panels').innerHTML=list('Traffic sources',s.sources,'source')+list('Top pages',s.pages,'path')+list('Devices',s.devices,'device')}
 $('#range').addEventListener('change',renderStats);
 
-loadOrders();loadPkgs();loadProds();loadSettings();loadLeads();api('/stats').then(function(d){STATS=d;renderStats()});
+loadOrders();loadPkgs();loadProds();loadStores();loadSettings();loadLeads();api('/stats').then(function(d){STATS=d;renderStats()});
 </script></body></html>
